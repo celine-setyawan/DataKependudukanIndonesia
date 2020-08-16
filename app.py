@@ -1,67 +1,321 @@
-######### Import your libraries #######
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+import json
 import pandas as pd
 import plotly as py
+import base64
+
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
 import plotly.graph_objs as go
+
 from plotly.graph_objs import *
+from dash.dependencies import Input, Output
 
-###### Import a dataframe #######
-df = pd.read_pickle('virginia_totals.pkl')
-options_list=list(df['jurisdiction'].value_counts().sort_index().index)
+# ------------------------------------------------------------------------------
+# Import and clean data
 
-########### Initiate the app
+with open('./data/IDN_adm_1_province.json') as f:
+    geodata = json.load(f)
+    # print(geodata)
+
+data_penduduk = pd.read_csv("./data/jumlah_penduduk_1971-2019.csv")
+df_choropleth = data_penduduk.copy()
+df_choropleth = df_choropleth[df_choropleth.Provinsi != 'Indonesia']
+
+options_list = list(df_choropleth.columns[1:])
+
+
+# ------------------------------------------------------------------------------
+# Load Image
+
+path_arrow = './assets/up-arrow.png'
+path_new = './assets/new.png'
+
+encoded_up_arrow = base64.b64encode(open(path_arrow, 'rb').read())
+encoded_new = base64.b64encode(open(path_new, 'rb').read())
+
+
+# ------------------------------------------------------------------------------
+# Initiate app
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
-app.title='VA 2016'
+app.title='Pertumbuhan Penduduk RI'
 
-####### Layout of the app ########
+
+def create_line_chart():
+    figure = go.Figure()
+    figure.update_layout(
+        title={
+            'text': '<b>Jumlah Penduduk Indonesia dari Tahun 1971 - 2019</b>',
+            'y': 0.9,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
+        font=dict(color='black'),
+        xaxis=dict(
+            title='Tahun',
+            showline=True,
+            showgrid=False,
+            showticklabels=True,
+            linecolor='rgb(204, 204, 204)',
+            linewidth=2,
+            ticks='outside',
+        ),
+        yaxis=dict(
+            title='Jumlah Penduduk',
+            showgrid=False,
+            zeroline=False,
+            showline=True,
+            linecolor='rgb(204, 204, 204)',
+        ),
+        plot_bgcolor='white',
+        annotations=[(dict(xref='paper', yref='paper', x=0.5, y=-0.2,
+                           xanchor='center', yanchor='top',
+                           text='Sumber: Badan Pusat Statistik (https://www.bps.go.id/)',
+                           font=dict(family='Arial',
+                                     size=12,
+                                     color='rgb(150,150,150)'),
+                           showarrow=False))]
+    )
+    
+    tahun = list(df_choropleth.columns[1:])
+
+    for provinsi in df_choropleth.Provinsi:
+        penduduk_tiap_tahun = df_choropleth.iloc[:, 1:].loc[df_choropleth['Provinsi'] == provinsi].values.flatten().tolist()
+
+        if provinsi == 'Jawa Barat':
+            figure.add_trace(go.Scatter(x=tahun, 
+                                        y=penduduk_tiap_tahun,
+                                        mode='lines',
+                                        name=provinsi,
+                                        showlegend=True,
+                                        line=dict(color='#B21727', width=7)
+                            )
+            )
+
+        elif provinsi == 'Jawa Timur':
+            figure.add_trace(go.Scatter(x=tahun, 
+                                        y=penduduk_tiap_tahun,
+                                        mode='lines',
+                                        name=provinsi,
+                                        showlegend=True,
+                                        line=dict(color='#DC626E', width=5)
+                            )
+            )
+        elif provinsi == 'Jawa Tengah':
+            figure.add_trace(go.Scatter(x=tahun, 
+                                        y=penduduk_tiap_tahun,
+                                        mode='lines',
+                                        name=provinsi,
+                                        showlegend=True,
+                                        line=dict(color='#F18E97', width=3)
+                            )
+            )
+        elif provinsi == 'Kalimantan Utara':
+            figure.add_trace(go.Scatter(x=tahun, 
+                                        y=penduduk_tiap_tahun,
+                                        mode='lines',
+                                        name=provinsi,
+                                        showlegend=True,
+                                        line=dict(color='#F1C511', width=7)
+                            )
+            )
+        elif provinsi == 'Maluku':
+            figure.add_trace(go.Scatter(x=tahun, 
+                                        y=penduduk_tiap_tahun,
+                                        mode='lines',
+                                        name=provinsi,
+                                        showlegend=True,
+                                        line=dict(color='#67B224', width=7)
+                            )
+            )
+        else:
+            figure.add_trace(go.Scatter(x=tahun, 
+                                        y=penduduk_tiap_tahun,
+                                        mode='lines',
+                                        name=provinsi,
+                                        showlegend=False,
+                                        line=dict(color='#C4C3C2')
+                            )
+            )
+
+    return figure
+
+
+# ------------------------------------------------------------------------------
+# App layout
+
 app.layout = html.Div([
-    html.H3('2016 Presidential Election: Vote Totals by Jurisdiction'),
-    dcc.Dropdown(
-        id='dropdown',
-        options=[{'label': i, 'value': i} for i in options_list],
-        value=options_list[0]
-    ),
+    dbc.Container([
+        html.H2('Data Kependudukan Indonesia per Provinsi', style={'font-weight': 'bold', 'margin-left': '10%'}),
+        dbc.Row([
+            dbc.Col([
+                html.H1('3', style={'margin': '10px', 'font-size': '80px', 'color': '#B21727'}),
+                html.P(children=[
+                    html.Span('Provinsi dengan '),
+                    html.B('jumlah penduduk terbanyak '),
+                    html.Span('berada di '),
+                    html.B('Pulau Jawa '),
+                    html.Br(),
+                    html.Span('(saat ini di atas 34 juta)'),
+                    html.Br(),
+                    html.Br(),
+                    html.Span('Penduduk di provinsi lainnya berjumlah di bawah 15 juta'),
+                ], style={'margin-left': '10%', 'margin-right': '10%'}),
+            ], style={'background': 'white',
+                'border-radius': '5px',
+                'border': '1px solid #BEC2C4',
+                'box-shadow': '3px 3px 5px #B21727',
+                'width': '500px',
+                'height': '300px',
+                'text-align': 'center'}
+            ),
+            dbc.Col([
+                html.Img(src='data:image/png;base64,{}'.format(encoded_up_arrow.decode()), height=70,
+                         style={'margin-top': '30px'}),
+                html.P(children=[
+                    html.Span('Pertumbuhan jumlah penduduk terjadi secara '),
+                    html.B('signifikan '),
+                    html.Span('di provinsi '),
+                    html.B('Jawa Barat.'),
+                    html.Br(),
+                    html.Br(),
+                    html.Span('Sedangkan provinsi lainnya cenderung landai.'),
+                ], style={'margin-top': '10px', 'margin-left': '10%', 'margin-right': '10%'}),
+            ], style={'background': 'white',
+                'border-radius': '5px',
+                'border': '1px solid #BEC2C4',
+                'box-shadow': '3px 3px 5px #B21727',
+                'width': '500px',
+                'height': '300px',
+                'margin-left': '20px',
+                'text-align': 'center'}
+            ),
+            dbc.Col([
+                html.Img(src='data:image/png;base64,{}'.format(encoded_new.decode()), height=70,
+                         style={'right': '0', 'position': 'absolute'}),
+                html.P(children=[
+                    html.Span('Jumlah penduduk di beberapa provinsi masih sedikit, beberapa di antaranya karena merupakan '),
+                    html.B('provinsi baru'),
+                    html.Span(', seperti '),
+                    html.B('Kalimantan Utara.'),
+                    html.Br(),
+                    html.Br(),
+                    html.Span('Terlepas dari provinsi baru, penduduk provinsi di luar Pulau Jawa cenderung lebih sedikit.'),
+                ], style={'margin-top': '35px', 'margin-left': '10%', 'margin-right': '10%'}),
+            ], style={'background': 'white',
+                'border-radius': '5px',
+                'border': '1px solid #BEC2C4',
+                'box-shadow': '3px 3px 5px #B21727',
+                'width': '500px',
+                'height': '300px',
+                'margin-left': '20px',
+                'text-align': 'center'}
+            ),
+        ], style={'margin-top': '20px', 'margin-left': '10%',
+                  'display': 'flex', 'justify-content': 'space-between'}
+        ),
+
+        dbc.Row([
+            dbc.Col([
+                html.Div([
+                    html.Label(['Tampilkan data tahun:',
+                                dcc.Dropdown(id='dropdown_tahun',
+                                             options=[{'label': i, 'value': i} for i in options_list],
+                                             multi=False,
+                                             clearable=False,
+                                             value=options_list[-1],
+                                             style={'font-weight': 'normal'})]),
+                ], style={'width': '165px'}
+            )], style={'display': 'flex', 'align-items': 'center', 'margin-left': '50px'}),
+
+            dbc.Col([
+                dcc.Loading([
+                    dcc.Graph(id='choropleth_indonesia',
+                              figure={}
+                    )
+                ], type='default', color="#B21727"),
+            ]),
+        ],
+            style={'background': 'white',
+                'border-radius': '5px',
+                'border': '1px solid #BEC2C4',
+                'box-shadow': '3px 3px 5px #B21727',
+                'width': '1200px',
+                'height': '450px',
+                'margin-top': '20px',
+                'margin-left': '10%',
+                'display': 'flex',
+                'justify-content': 'space-between'}
+        ),
+
+        dbc.Row([
+            dbc.Col([
+                dcc.Loading([
+                    dcc.Graph(id='line_chart',
+                              figure=create_line_chart()
+                    )
+                ], type='default', color="#B21727"),
+            ]),
+        ],
+            style={'background': 'white',
+                'border-radius': '5px',
+                'border': '1px solid #BEC2C4',
+                'box-shadow': '3px 3px 5px #B21727',
+                'width': '1200px',
+                'height': '450px',
+                'margin-top': '20px',
+                'margin-left': '10%',
+                'text-align': 'center'}
+        ),
+
+    ], style={'margin': '5px 5px 5px 5px', 'text-align': 'left'}),
+
     html.Br(),
-    dcc.Graph(id='display-value'),
-    html.Br(),
-    html.A('Code on Github', href='https://github.com/austinlasseter/virginia_election_2016'),
-    html.Br(),
-    html.A('Data Source', href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/LYWX3D')
+    dbc.Row([
+        html.A('Code on Github', href='https://github.com/celineinc/DataKependudukanIndonesia'),
+        html.A('Data Penduduk', href='https://www.bps.go.id/indikator/indikator/view_data_pub/0000/api_pub/50/da_03/1'),
+        html.A('Data GeoJSON', href='https://github.com/superpikar/indonesia-geojson')
+    ], style={'margin-left': '10%', 'display': 'flex', 'justify-content': 'space-evenly'})
 ])
 
 
-######### Interactive callbacks go here #########
-@app.callback(dash.dependencies.Output('display-value', 'figure'),
-              [dash.dependencies.Input('dropdown', 'value')])
-def juris_picker(juris_name):
-    juris_df=df[df['jurisdiction']==juris_name]
+# ------------------------------------------------------------------------------
+# Connect the Plotly graphs with Dash Components
 
-    mydata1 = go.Bar(x=list(juris_df['precinct'].value_counts().index),
-                     y=list(juris_df['votes']['Donald Trump']),
-                     marker=dict(color='#122A7F'),
-                     name='Trump')
-    mydata2 = go.Bar(x=list(juris_df['precinct'].value_counts().index),
-                     y=list(juris_df['votes']['Hillary Clinton']),
-                     marker=dict(color='#f96800'),
-                     name='Clinton')
-    mydata3 = go.Bar(x=list(juris_df['precinct'].value_counts().index),
-                     y=list(juris_df['votes']['Other']),
-                     marker=dict(color='#009900'),
-                     name='Other')
-
-    mylayout = go.Layout(
-        title='Votes by candidate for: {}'.format(juris_name),
-        xaxis=dict(title='Precincts'),
-        yaxis=dict(title='Number of Votes')
+@app.callback(Output('choropleth_indonesia', 'figure'),
+              [Input('dropdown_tahun', 'value')])
+def update_choropleth(selected_year):
+    figure = go.Figure()
+    figure.add_trace(
+        go.Choropleth(geojson=geodata,
+                      locations=df_choropleth.Provinsi,
+                      z=df_choropleth[selected_year],
+                      zmax=50000000,
+                      zmin=0,
+                      featureidkey='properties.NAME_1',
+                      marker_line_color='black',
+                      colorscale='Reds',
+                      colorbar_title='<b>Jumlah Penduduk<b>')
     )
-    fig = go.Figure(data=[mydata1, mydata2, mydata3], layout=mylayout)
-    return fig
+    figure.update_layout(
+        title='<b>Peta Jumlah Penduduk Indonesia Tahun </b><b>' + selected_year + '</b>',
+        geo_scope='asia',
+        geo_projection_scale=3,
+        geo_center_lat=0,
+        geo_center_lon=118,
+        font=dict(color='black'),
+        margin={"r": 5, "t": 100, "l": 5, "b": 50}
+    )
+
+    return figure
 
 
-######### Run the app #########
+# ------------------------------------------------------------------------------
+# Run the app
+
 if __name__ == '__main__':
     app.run_server(debug=True)

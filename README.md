@@ -1,6 +1,7 @@
-# Virginia 2016 Presidential Election
+# Data Kependudukan Indonesia per Provinsi
 
-You can view the finished app here: https://virginia-2016-vote-totals.herokuapp.com/
-Data Source: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/LYWX3D
+*Interactive dashboard* bisa diakses di link berikut: https://data-kependudukan-indonesia.herokuapp.com/
 
-I wrote this medium post to explain deployment: https://medium.com/@austinlasseter/how-to-deploy-a-simple-plotly-dash-app-to-heroku-622a2216eb73
+**Sumber Data**:
+- ***Data Penduduk*** https://www.bps.go.id/indikator/indikator/view_data_pub/0000/api_pub/50/da_03/1
+- ***Data GEOJson*** https://github.com/superpikar/indonesia-geojson
