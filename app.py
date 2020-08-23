@@ -19,7 +19,7 @@ with open('./data/IDN_adm_1_province.json') as f:
     geodata = json.load(f)
     # print(geodata)
 
-data_penduduk = pd.read_csv("./data/jumlah_penduduk_1971-2019.csv")
+data_penduduk = pd.read_csv('./data/jumlah_penduduk_1971-2019.csv')
 df_choropleth = data_penduduk.copy()
 df_choropleth = df_choropleth[df_choropleth.Provinsi != 'Indonesia']
 
@@ -33,12 +33,15 @@ path_arrow = './assets/up-arrow.png'
 path_new = './assets/new.png'
 path_question = './assets/question.png'
 path_graph = './assets/graph.png'
+path_linkedin = './assets/linkedin.png'
+path_instagram = './assets/instagram.png'
 
 encoded_up_arrow = base64.b64encode(open(path_arrow, 'rb').read())
 encoded_new = base64.b64encode(open(path_new, 'rb').read())
 encoded_question = base64.b64encode(open(path_question, 'rb').read())
 encoded_graph = base64.b64encode(open(path_graph, 'rb').read())
-
+encoded_linkedin = base64.b64encode(open(path_linkedin, 'rb').read())
+encoded_instagram = base64.b64encode(open(path_instagram, 'rb').read())
 
 # ------------------------------------------------------------------------------
 # Initiate app
@@ -246,7 +249,7 @@ app.layout = html.Div([
                     dcc.Graph(id='choropleth_indonesia',
                               figure={}
                     )
-                ], type='default', color="#B21727"),
+                ], type='default', color='#B21727'),
             ]),
         ],
             style={'background': 'white',
@@ -358,7 +361,7 @@ app.layout = html.Div([
                     dcc.Graph(id='line_chart',
                               figure=create_line_chart()
                     )
-                ], type='default', color="#B21727"),
+                ], type='default', color='#B21727'),
             ]),
         ],
             style={'background': 'white',
@@ -377,10 +380,16 @@ app.layout = html.Div([
 
     html.Br(),
     dbc.Row([
-        html.A('Code on Github', href='https://github.com/celineinc/DataKependudukanIndonesia'),
-        html.A('Data Penduduk', href='https://www.bps.go.id/indikator/indikator/view_data_pub/0000/api_pub/50/da_03/1'),
-        html.A('Data GeoJSON', href='https://github.com/superpikar/indonesia-geojson')
-    ], style={'margin-left': '10%', 'margin-right': '10%',
+        html.A(children=[
+            html.Img(src='data:image/png;base64,{}'.format(encoded_linkedin.decode()), height=20)
+        ], href='https://www.linkedin.com/in/celine-setyawan/', target='_blank'),
+        html.A(children=[
+            html.Img(src='data:image/png;base64,{}'.format(encoded_instagram.decode()), height=20)
+        ], href='https://www.instagram.com/portfolio.data.celine/', target='_blank'),
+        html.A('Code on GitHub', href='https://github.com/celineinc/DataKependudukanIndonesia', target='_blank'),
+        html.A('Data Penduduk', href='https://www.bps.go.id/indikator/indikator/view_data_pub/0000/api_pub/50/da_03/1', target='_blank'),
+        html.A('Data GeoJSON', href='https://github.com/superpikar/indonesia-geojson', target='_blank')
+    ], style={'margin-right': '10%',
               'display': 'flex', 'justify-content': 'space-evenly'})
 ])
 
@@ -410,7 +419,7 @@ def update_choropleth(selected_year):
         geo_center_lat=0,
         geo_center_lon=118,
         font=dict(color='black'),
-        margin={"r": 5, "t": 100, "l": 5, "b": 50}
+        margin={'r': 5, 't': 100, 'l': 5, 'b': 50}
     )
 
     return figure
