@@ -4,4 +4,4 @@
 
 **Sumber Data**:
 - **Data Penduduk** https://www.bps.go.id/indikator/indikator/view_data_pub/0000/api_pub/50/da_03/1
-- **Data GEOJson** https://github.com/superpikar/indonesia-geojson
+- **Data GeoJSON** https://github.com/superpikar/indonesia-geojson
