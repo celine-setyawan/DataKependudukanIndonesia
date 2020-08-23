@@ -250,7 +250,7 @@ app.layout = html.Div([
                               figure={}
                     )
                 ], type='default', color='#B21727'),
-            ]),
+            ], style={'width': '70%', 'margin-left': '2%', 'margin-right': '2%'})
         ],
             style={'background': 'white',
                 'border-radius': '5px',
@@ -389,7 +389,7 @@ app.layout = html.Div([
         html.A('Code on GitHub', href='https://github.com/celineinc/DataKependudukanIndonesia', target='_blank'),
         html.A('Data Penduduk', href='https://www.bps.go.id/indikator/indikator/view_data_pub/0000/api_pub/50/da_03/1', target='_blank'),
         html.A('Data GeoJSON', href='https://github.com/superpikar/indonesia-geojson', target='_blank')
-    ], style={'margin-right': '10%',
+    ], style={'margin-left': '5%', 'margin-right': '10%',
               'display': 'flex', 'justify-content': 'space-evenly'})
 ])
 
